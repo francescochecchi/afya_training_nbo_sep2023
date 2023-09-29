@@ -109,8 +109,6 @@
     table(complete.cases(prmn)) # no missing values
       
     # Aggregate (sum) dataset by region, district, year, month, reason
-    prmn_aggr <- aggregate(prmn$n_idp, by = prmn[, c("region", "district", 
-      "year", "month", "reason")], FUN = sum) # ouch - wrong variable names
     prmn_aggr <- aggregate(prmn$n_idp, by = prmn[, c("region_dep", "district_dep", 
       "year", "month", "reason")], FUN = sum) # ok
     head(prmn_aggr)
@@ -260,7 +258,7 @@
     str(merged_plot$date) # not yet a date!
     merged_plot$date <- ymd(merged_plot$date) # now a date
     
-    # Aggregate the data by date, n_idp
+    # Aggregate the data by date
     merged_plot <- aggregate(merged_plot$n_idp, by = list(merged_plot$date),
       FUN = sum)
     colnames(merged_plot) <- c("date", "n_idp")
@@ -285,27 +283,42 @@
         height = 13, width = 20)  
     
 
-    # Plot a scatter plot of departure rate versus CDI
-      # basic plot
-      ggplot(data = merged_plot, mapping = aes(x = date, y = n_idp) ) +
-        geom_bar(stat = "identity")
+  #.........................................      
+  ## Plot of number of IDP departures per month, by region + reason for leaving
+        
+    # Prepare a separate dataframe for the plot
+    merged_plot <- merged
+    merged_plot <- na.omit(merged_plot)
     
-      # make it prettier
-      ggplot(data = merged_plot, mapping = aes(x = date, y = n_idp) ) +
-        geom_bar(stat = "identity", colour = palette_cb[6], 
-          fill = palette_cb[6], alpha = 0.5) +
+    # Add a date variable again
+    merged_plot$date <- paste(merged_plot$year, merged_plot$month, 
+      "15", sep = "-")
+    head(merged_plot$date)
+    str(merged_plot$date) # not yet a date!
+    merged_plot$date <- ymd(merged_plot$date) # now a date
+
+    # Aggregate the data by date, region and reason for leaving
+    merged_plot <- aggregate(merged_plot$n_idp, 
+      by = merged_plot[, c("date", "region", "reason")], FUN = sum)
+    colnames(merged_plot) <- c("date", "region", "reason", "n_idp")
+          
+    # Plot
+      # plot: notice that reason is within the aes()
+      ggplot(data = merged_plot, mapping = aes(x = date, y = n_idp, 
+        colour = reason, fill = reason) ) +
+        geom_bar(stat = "identity", alpha = 0.5) +
         theme_bw() +
+        scale_color_manual(values = palette_cb[c(4,7,6,1)]) +
+        scale_fill_manual(values = palette_cb[c(4,7,6,1)]) +
         scale_y_continuous(name = "number of IDPs departing", 
-          labels = scales::label_number_auto(), 
-          breaks = seq(0, 400000, by = 50000)) +
-        scale_x_date(name = "", labels = date_format("%Y"), breaks = "1 year")
+          labels = scales::label_number_auto() ) +
+        scale_x_date(name = "", labels = date_format("%Y"), breaks = "1 year") +
+        facet_wrap(. ~ region, scales = "free_y", ncol = 3) +
+        theme(legend.position = "top")
         
       # if we like it, let's save it
-      ggsave("trends_idp_departures.png", dpi = "print", units = "cm", 
-        height = 13, width = 20)  
-    
-      
-          
+      ggsave("trends_idps_by_region_reason.png", dpi = "print", units = "cm", 
+        height = 25, width = 20)  
     
                         
 #...............................................................................  

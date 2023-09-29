@@ -66,8 +66,8 @@
     # Access different elements of the data frame
       # a whole column
       partner_data$year_founded # or
-      partner_data[, "year_founded"] # or
-      partner_data[, 2]
+      partner_data[ , "year_founded"] # or
+      partner_data[ , 2]
     
       # a whole row
       partner_data[3, ]
@@ -104,4 +104,9 @@
     }
      
     f_degrees("PhD")
-         
+   
+  
+    
+    f_square <- function(x) {x^2}
+    f_square(16)    
+          
